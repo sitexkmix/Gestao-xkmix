@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SISTEMA GESTÃO - XKmix</title>
+    <style>
+        :root {
+            --roxo-fundo: #4b2c71; 
+            --roxo-card: #ffffff;
+            --laranja: #e67e22;
+            --verde-zap: #25D366;
+            --vermelho: #ff4757;
+        }
+        body { font-family: sans-serif; background-color: var(--roxo-fundo); margin: 0; padding: 0; color: #333; overflow-x: hidden; }
+        
+        /* MENU LATERAL */
+        #menu-lateral { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background-color: #f8f9fa; overflow-x: hidden; transition: 0.3s; padding-top: 60px; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
+        #menu-lateral a { padding: 15px 25px; text-decoration: none; font-size: 16px; color: var(--roxo-fundo); display: block; border-bottom: 1px solid #ddd; font-weight: bold; }
+        .btn-menu { font-size: 30px; cursor: pointer; color: white; position: fixed; top: 15px; left: 15px; z-index: 900; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 0 10px; }
+
+        /* TELA DE LOGIN */
+        #tela-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--roxo-fundo); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-box { background: white; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-box select, .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn-entrar { background: var(--laranja); color: white; border: none; width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+
+        /* CABEÇALHO */
+        .header { text-align: center; padding: 20px 15px 10px; }
+        .logo-container { width: 100px; height: 100px; margin: 0 auto; background: #fff; border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--laranja); overflow: hidden; }
+        .logo-container img { width: 100%; height: 100%; object-fit: contain; }
+        
+        .container { max-width: 500px; margin: auto; padding: 15px; padding-bottom: 180px; }
+
+        /* CARDS E ITENS */
+        .categoria-card { background: var(--roxo-card); border-radius: 12px; margin-bottom: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        h2 { color: var(--roxo-fundo); font-size: 14px; border-bottom: 2px solid #eee; margin: 0 0 10px 0; padding-bottom: 5px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f2f2f2; }
+        
+        .btn-add-item { background: var(--laranja); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; }
+        .btn-del-item { color: var(--vermelho); background: none; border: none; font-size: 22px; cursor: pointer; font-weight: bold; line-height: 1; }
+
+        /* RODAPÉ FIXO */
+        .footer-fixed { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--roxo-fundo); padding: 15px; box-sizing: border-box; z-index: 800; border-top: 2px solid var(--laranja); text-align: center; }
+        .btn-whatsapp { background: var(--verde-zap); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; max-width: 400px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="tela-login">
+    <div class="logo-container"><img src="https://i.ibb.co/XrnM3fPj/image.png"></div>
+    <div class="login-box">
+        <h3>SISTEMA XKMIX</h3>
+        <select id="local-login">
+            <option value="pdp">Loja PDP</option>
+            <option value="cdv">Loja CDV</option>
+            <option value="tjcpp">Loja TJCPP</option>
+            <option value="goiana">Loja GOIANA</option>
+            <option value="expresso">Loja EXPRESSO</option>
+            <option value="adm">Login ADM</option>
+        </select>
+        <input type="password" id="senha" placeholder="Senha de Acesso">
+        <button class="btn-entrar" onclick="verificarLogin()">ACESSAR SISTEMA</button>
+    </div>
+</div>
+
+<div id="conteudo-sistema" style="display:none;">
+    <span class="btn-menu" onclick="toggleMenu(250)">&#9776;</span>
+    <div id="menu-lateral">
+        <a href="javascript:void(0)" onclick="toggleMenu(0)" style="font-size:30px;">&times;</a>
+        <a href="#" onclick="showView('pedido')">📝 Fazer Pedido</a>
+        <a href="#" onclick="showView('estoque')">📦 Estoque (Breve)</a>
+        <a href="#" onclick="showView('historico')">📅 Histórico</a>
+        <hr>
+        <a href="#" onclick="location.reload()" style="color:var(--vermelho);">➔ SAIR</a>
+    </div>
+
+    <div class="header">
+        <div class="logo-container"><img src="https://i.ibb.co/XrnM3fPj/image.png"></div>
+        <p id="label-loja" style="color:white; font-weight:bold; margin-top:10px;"></p>
+    </div>
+
+    <div class="container">
+        <div id="view-pedido">
+            <div style="background:white; padding:10px; border-radius:10px; margin-bottom:15px; border: 2px solid var(--laranja);">
+                <input type="number" id="zap-fone" placeholder="WhatsApp para Envio" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px; box-sizing:border-box;">
+            </div>
+            <div id="lista-produtos"></div>
+        </div>
+    </div>
+
+    <div class="footer-fixed" id="footer-acoes">
+        <button class="btn-whatsapp" onclick="enviarWhatsApp()">🚀 ENVIAR PEDIDO VIA WHATSAPP</button>
+    </div>
+</div>
+
+<script>
+    // URL do seu Realtime Database
+    const DB_URL = "https://sistema-xkmix-default-rtdb.firebaseio.com/produtos.json";
+    
+    let baseProdutos = {
+        "SORVETES / AÇAÍS": ["Açaí", "Chocolate", "Morango"],
+        "COMPLEMENTOS": ["Granola", "Leite Condensado"],
+        "EMBALAGENS": ["Copo 300ml", "Copo 500ml"]
+    };
+
+    let lojaAtual = "";
+
+    async function carregarDoFirebase() {
+        try {
+            const r = await fetch(DB_URL);
+            const dados = await r.json();
+            if (dados) baseProdutos = dados;
+        } catch (e) { console.log("Erro ao carregar banco."); }
+        renderizar();
+    }
+
+    async function sincronizarFirebase() {
+        try {
+            await fetch(DB_URL, { method: 'PUT', body: JSON.stringify(baseProdutos) });
+        } catch (e) { alert("Erro de conexão!"); }
+        renderizar();
+    }
+
+    function verificarLogin() {
+        const pass = document.getElementById('senha').value;
+        if(pass !== "") {
+            lojaAtual = document.getElementById('local-login').value;
+            document.getElementById('tela-login').style.display = 'none';
+            document.getElementById('conteudo-sistema').style.display = 'block';
+            document.getElementById('label-loja').innerText = "LOJA: " + lojaAtual.toUpperCase();
+            document.getElementById('zap-fone').value = localStorage.getItem('zap_save') || "";
+            carregarDoFirebase();
+        }
+    }
+
+    function adicionarItem(cat) {
+        const novo = prompt("Nome do novo item para " + cat + ":");
+        if(novo) {
+            if(!baseProdutos[cat]) baseProdutos[cat] = [];
+            baseProdutos[cat].push(novo);
+            sincronizarFirebase();
+        }
+    }
+
+    function excluirItem(cat, item) {
+        if(confirm("Deseja remover '" + item + "' definitivamente?")) {
+            baseProdutos[cat] = baseProdutos[cat].filter(i => i !== item);
+            sincronizarFirebase();
+        }
+    }
+
+    function renderizar() {
+        const div = document.getElementById('lista-produtos');
+        div.innerHTML = '';
+        const selecionados = JSON.parse(localStorage.getItem('sel_' + lojaAtual) || "[]");
+
+        for (let cat in baseProdutos) {
+            let card = `<div class="categoria-card">
+                <h2>${cat} <button class="btn-add-item" onclick="adicionarItem('${cat}')">+ ADD</button></h2>`;
+            
+            baseProdutos[cat].forEach(item => {
+                const checked = selecionados.includes(item) ? 'checked' : '';
+                card += `<div class="item-row">
+                    <label style="flex:1; display:flex; gap:10px; cursor:pointer;">
+                        <input type="checkbox" onchange="toggleItem('${item}')" ${checked} style="width:20px; height:20px;">
+                        ${item}
+                    </label>
+                    <button class="btn-del-item" onclick="excluirItem('${cat}','${item}')">×</button>
+                </div>`;
+            });
+            
+            div.innerHTML += card + `</div>`;
+        }
+    }
+
+    function toggleItem(item) {
+        let sel = JSON.parse(localStorage.getItem('sel_' + lojaAtual) || "[]");
+        if(sel.includes(item)) sel = sel.filter(x => x !== item);
+        else sel.push(item);
+        localStorage.setItem('sel_' + lojaAtual, JSON.stringify(sel));
+    }
+
+    function enviarWhatsApp() {
+        const sel = JSON.parse(localStorage.getItem('sel_' + lojaAtual) || "[]");
+        const fone = document.getElementById('zap-fone').value;
+        if(!fone || sel.length === 0) return alert("Selecione itens e informe o WhatsApp!");
+
+        localStorage.setItem('zap_save', fone);
+        let msg = `*📦 NOVO PEDIDO - ${lojaAtual.toUpperCase()}*\n\n`;
+        
+        // Organiza por categoria na mensagem
+        for(let cat in baseProdutos) {
+            const itensCat = baseProdutos[cat].filter(i => sel.includes(i));
+            if(itensCat.length > 0) {
+                msg += `*${cat}*\n`;
+                itensCat.forEach(i => msg += `• ${i}\n`);
+                msg += `\n`;
+            }
+        }
+
+        window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`);
+    }
+
+    function toggleMenu(w) { document.getElementById("menu-lateral").style.width = w + "px"; }
+    function showView(v) { toggleMenu(0); if(v !== 'pedido') alert('Em desenvolvimento!'); }
+</script>
+</body>
+</html>
