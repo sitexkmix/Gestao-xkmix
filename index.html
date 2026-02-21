@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SISTEMA GESTÃO CLOUD - XKmix</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        :root { --roxo-fundo: #4b2c71; --roxo-card: #ffffff; --laranja: #e67e22; --verde-zap: #25D366; --vermelho: #ff4757; --azul-adm: #2e86de; }
+        body { font-family: sans-serif; background-color: var(--roxo-fundo); margin: 0; padding: 0; color: #333; overflow-x: hidden; }
+        #menu-lateral { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background-color: #f8f9fa; overflow-x: hidden; transition: 0.3s; padding-top: 60px; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
+        #menu-lateral a { padding: 15px 25px; text-decoration: none; font-size: 16px; color: var(--roxo-fundo); display: block; border-bottom: 1px solid #ddd; font-weight: bold; }
+        .btn-menu { font-size: 30px; cursor: pointer; color: white; position: fixed; top: 15px; left: 15px; z-index: 900; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 0 10px; }
+        #tela-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--roxo-fundo); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-box { background: white; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-box select, .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn-entrar { background: var(--laranja); color: white; border: none; width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        #conteudo-sistema { display: none; }
+        .header { text-align: center; padding: 20px 15px 10px; }
+        .logo-container { width: 100px; height: 100px; margin: 0 auto; background: #fff; border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--laranja); overflow: hidden; }
+        .logo-container img { width: 100%; height: 100%; object-fit: contain; }
+        .container { max-width: 500px; margin: auto; padding: 15px; padding-bottom: 220px; }
+        .info-sessao { background: rgba(255,255,255,0.1); color: white; text-align: center; padding: 5px; font-size: 11px; margin-bottom: 10px; border-radius: 5px; }
+        .categoria-card { background: var(--roxo-card); border-radius: 12px; margin-bottom: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        h2 { color: var(--roxo-fundo); font-size: 14px; border-bottom: 2px solid #eee; margin: 0 0 10px 0; padding-bottom: 5px; text-transform: uppercase; }
+        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f2f2f2; }
+        .estoque-controles { display: flex; align-items: center; gap: 8px; }
+        .btn-qtd { background: #eee; border: none; width: 30px; height: 30px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .qtd-num { font-weight: bold; min-width: 25px; text-align: center; }
+        .sem-estoque { color: var(--vermelho); text-decoration: line-through; opacity: 0.5; }
+        .footer-fixed { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--roxo-fundo); padding: 10px; box-sizing: border-box; z-index: 800; border-top: 2px solid var(--laranja); }
+        .btn-whatsapp { background: var(--verde-zap); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .pedido-historico { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--laranja); position: relative; font-size: 13px; }
+        .btn-del-hist { position: absolute; top: 10px; right: 10px; color: var(--vermelho); border: none; background: none; font-size: 20px; font-weight: bold; }
+        .filtro-adm { background: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; border: 2px solid var(--laranja); }
+        .filtro-adm select { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div id="tela-login">
+    <div class="header"><div class="logo-container"><img src="https://i.ibb.co/XrnM3fPj/image.png" alt="Logo XKmix"></div></div>
+    <div class="login-box">
+        <h3>SISTEMA XKMIX CLOUD</h3>
+        <select id="local-login">
+            <option value="pdp">Loja PDP</option>
+            <option value="cdv">Loja CDV</option>
+            <option value="tjcpp">Loja TJCPP</option>
+            <option value="goiana">Loja GOIANA</option>
+            <option value="expresso">Loja EXPRESSO</option>
+            <option value="adm">Administrador (ADM)</option>
+        </select>
+        <input type="text" id="user" placeholder="Usuário" autocapitalize="none">
+        <input type="password" id="pass" placeholder="Senha">
+        <button class="btn-entrar" onclick="verificarLogin()">ENTRAR</button>
+        <p id="erro" style="color:red; font-size:12px; display:none; margin-top:10px;">Login ou senha incorretos!</p>
+    </div>
+</div>
+
+<div id="conteudo-sistema">
+    <div id="menu-lateral">
+        <a href="javascript:void(0)" onclick="toggleMenu(0)" style="font-size:30px;">&times;</a>
+        <a href="#" onclick="showView('pedido'); toggleMenu(0)">📝 Fazer Pedido</a>
+        <a href="#" onclick="showView('estoque'); toggleMenu(0)">📦 Estoque Online</a>
+        <a href="#" onclick="showView('historico'); toggleMenu(0)">📅 Histórico Central</a>
+        <hr>
+        <div id="area-adm-menu" style="display:none;">
+            <a href="#" onclick="exportarEstoqueGeral(); toggleMenu(0)" style="color: var(--azul-adm);">📤 Exportar Tudo (Relatório)</a>
+            <hr>
+        </div>
+        <a href="#" onclick="logout()" style="color:var(--vermelho);">➔ SAIR DO SISTEMA</a>
+    </div>
+
+    <span class="btn-menu" onclick="toggleMenu(250)">&#9776;</span>
+    
+    <div class="header"><div class="logo-container"><img src="https://i.ibb.co/XrnM3fPj/image.png" alt="Logo XKmix"></div></div>
+    <div class="info-sessao" id="status-sessao"></div>
+
+    <div class="container">
+        <div id="view-pedido">
+            <div class="filtro-adm"><input type="number" id="zap-destino" placeholder="Número WhatsApp (Ex: 55819...)" onchange="salvarZap(this.value)"></div>
+            <div id="app-pedidos">Carregando itens...</div>
+        </div>
+        <div id="view-estoque" style="display:none;"><h2 style="color:white; border:none;">Controle de Estoque</h2><div id="filtro-estoque-adm" class="filtro-adm" style="display:none;"><select id="select-estoque-adm" onchange="renderEstoque()"></select></div><div id="app-estoque">Carregando dados...</div></div>
+        <div id="view-historico" style="display:none;"><h2 style="color:white; border:none;">Registro de Atividades</h2><div id="filtro-hist-adm" class="filtro-adm" style="display:none;"><select id="select-loja-adm" onchange="renderHistorico()"></select></div><div id="lista-historico"></div></div>
+    </div>
+
+    <div class="footer-fixed" id="footer-pedido">
+        <button class="btn-whatsapp" onclick="enviarWhatsApp()">🚀 ENVIAR PEDIDO</button>
+        <button onclick="limparMarcacoes()" style="background:none; border:none; color:white; width:100%; margin-top:8px; font-size:11px; text-decoration:underline; cursor:pointer;">Limpar seleção atual</button>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAH5egfaSGzr74JGZB-Wzii1VdkC1UiFKk",
+        authDomain: "sistema-xkmix.firebaseapp.com",
+        projectId: "sistema-xkmix",
+        storageBucket: "sistema-xkmix.firebasestorage.app",
+        messagingSenderId: "1096205200442",
+        appId: "1:1096205200442:web:491c0f7b57bd7599f71903",
+        databaseURL: "https://sistema-xkmix-default-rtdb.firebaseio.com/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const LOJAS = ["pdp", "tjcpp", "cdv", "goiana", "expresso"];
+    const CREDENCIAIS = { "pdp": {user: "pdp", pass: "loja1"}, "tjcpp": {user: "tjcpp", pass: "loja2"}, "cdv": {user: "cdv", pass: "loja3"}, "goiana": {user: "goiana", pass: "loja4"}, "expresso": {user: "expresso", pass: "loja5"}, "adm": {user: "adm", pass: "xkmix2026"} };
+    const database_itens = { "SORVETES / AÇAÍS": ["Abacaxi", "Abacaxi ao vinho", "Açaí", "Açaí c/ ninho", "Bananinha", "Base baulinha", "Base ninho", "Blue ice", "Caipirinha", "Canjica", "Cereja", "Choco menta", "Chocolate", "Cupuaçu", "Diamante Negro", "Ferrero rocher", "Frutas vermelhas", "Kiwi", "Limão", "Maçã verde", "Maracujá", "Morango", "Ninho com nutella", "Nutella", "Oreo", "Ovomaltine", "Paçoca", "Passas ao rum", "Pistache", "Prestígio"], "COMPLEMENTOS": ["Amendoim", "Balafini amora", "Balafini azedinha", "Balafini bananinha", "Balafini beijinho", "Balafini colorida", "Canudo waffer", "Choco ball", "Farinha láctea", "Gotas de chocolate", "Granola", "Granulado", "Granulado colorido", "Jujuba", "Leite condensado", "Mashwmallow", "MM", "Ovinho de amendoim", "Ovomaltine", "Paçoca"], "CREMES": ["Amarena", "Avelã", "Avelã essencial", "Choco trufa", "Coco", "Cookies", "Doce de leite", "Geleia de morango", "Laka", "Leitinho", "Leitinho crocante", "Oreo", "Ovomaltine", "Skimo", "Sonho de valsa"], "EMBALAGENS / DESCARTÁVEIS": ["Base flurry", "Base mr 300 ml", "Base mr 500 ml", "Copo 180 ml", "Copo 300 ml", "Copo 330 ml", "Copo 440 ml-milkshake", "Copo 500 ml", "Guardanapo copo", "Guardanapos mesa", "Kraft G", "Kraft M", "Kraft P", "Kraft PP", "Papel inter-folhas", "Sacola de lixo 50L", "Sacola de lixo 100L", "Sacola G", "Sacola M", "Sacola P", "Sacola PPP", "Tampa 300 ml", "Tampa 500 ml", "Tampa bolha", "Tampa flurry", "Tampa mr 300 ml", "Tampa mr 500 ml"], "BEBIDAS": ["Água mineral", "Água mineral com gás", "Coca cola 1L", "Coca cola 250 ml", "Coca cola 250 ml-zero", "Coca cola 500 ml", "Coca cola lata", "Coca cola lata- zero", "Coca cola 500 ml- zero", "Fanta lata", "Guaraná antártica 1L", "Guaraná lata", "H2O", "H2O limoneto", "Monster", "Schweppes lata", "Soda 1L", "Sukita 1L"], "MOLHOS": ["Ketchup", "Maionese", "Mostarda"], "COBERTURAS": ["Amora", "Blue ice", "Caramelo", "Chiclete", "Chocolate", "Doce de leite", "Fini bananinha", "Fini beijinho", "Fini dentadura", "Maracujá", "Morango"], "LIMPEZA": ["Água sanitária", "Álcool", "Desinfetante", "Detergente", "Pinho-sol", "Sabonete líquido"] };
+
+    let localLogado = "";
+
+    window.onload = () => {
+        const salvo = localStorage.getItem('xkmix_sessao');
+        if(salvo) { localLogado = salvo; entrarNoSistema(); }
+    };
+
+    function verificarLogin() {
+        const local = document.getElementById('local-login').value;
+        const u = document.getElementById('user').value.toLowerCase().trim();
+        const s = document.getElementById('pass').value.trim();
+        const cred = CREDENCIAIS[local];
+        if(cred && u === cred.user && s === cred.pass) {
+            localLogado = local;
+            localStorage.setItem('xkmix_sessao', local);
+            entrarNoSistema();
+        } else { document.getElementById('erro').style.display = 'block'; }
+    }
+
+    function entrarNoSistema() {
+        document.getElementById('tela-login').style.display = 'none';
+        document.getElementById('conteudo-sistema').style.display = 'block';
+        document.getElementById('status-sessao').innerText = `LOJA ATIVA: ${localLogado.toUpperCase()}`;
+        if(localLogado === 'adm') {
+            const opts = LOJAS.map(l => `<option value="${l}">Loja ${l.toUpperCase()}</option>`).join('');
+            document.getElementById('select-loja-adm').innerHTML = opts;
+            document.getElementById('select-estoque-adm').innerHTML = opts;
+            document.getElementById('filtro-hist-adm').style.display = 'block';
+            document.getElementById('filtro-estoque-adm').style.display = 'block';
+            document.getElementById('area-adm-menu').style.display = 'block';
+        }
+        document.getElementById('zap-destino').value = localStorage.getItem(`xkmix_zap_${localLogado}`) || "";
+        showView('pedido');
+    }
+
+    function logout() { if(confirm("Sair do sistema?")) { localStorage.removeItem('xkmix_sessao'); location.reload(); } }
+
+    function renderEstoque() {
+        const app = document.getElementById('app-estoque');
+        app.innerHTML = 'Sincronizando...';
+        let lojaAlvo = localLogado === 'adm' ? document.getElementById('select-estoque-adm').value : localLogado;
+        db.ref(`estoque/${lojaAlvo}`).on('value', (snapshot) => {
+            const estoque = snapshot.val() || {};
+            app.innerHTML = '';
+            for (let cat in database_itens) {
+                let h = `<div class="categoria-card"><h2>${cat}</h2>`;
+                database_itens[cat].forEach(item => {
+                    let qtd = estoque[item] || 0;
+                    h += `<div class="item-row"><span class="${qtd <= 0 ? 'sem-estoque' : ''}">${item}</span><div class="estoque-controles"><button class="btn-qtd" onclick="altEstoque('${lojaAlvo}', '${item}', -1)">-</button><span class="qtd-num">${qtd}</span><button class="btn-qtd" onclick="altEstoque('${lojaAlvo}', '${item}', 1)">+</button></div></div>`;
+                });
+                app.innerHTML += h + `</div>`;
+            }
+        });
+    }
+
+    function altEstoque(loja, item, v) { db.ref(`estoque/${loja}/${item}`).transaction(c => { let n = (c || 0) + v; return n < 0 ? 0 : n; }); }
+
+    function renderizar() {
+        const app = document.getElementById('app-pedidos');
+        db.ref(`marcados/${localLogado}`).on('value', (snapshot) => {
+            const marcados = snapshot.val() || [];
+            app.innerHTML = '';
+            for (let cat in database_itens) {
+                let h = `<div class="categoria-card"><h2>${cat}</h2>`;
+                database_itens[cat].forEach(item => {
+                    const check = marcados.includes(item) ? 'checked' : '';
+                    h += `<div class="item-row"><label style="display:flex;align-items:center;gap:10px;flex:1;"><input type="checkbox" onchange="alternar('${item}')" ${check}><span>${item}</span></label></div>`;
+                });
+                app.innerHTML += h + `</div>`;
+            }
+        });
+    }
+
+    function alternar(item) {
+        const ref = db.ref(`marcados/${localLogado}`);
+        ref.once('value', (s) => { let m = s.val() || []; m = m.includes(item) ? m.filter(x => x !== item) : [...m, item]; ref.set(m); });
+    }
+
+    function renderHistorico() {
+        const d = document.getElementById('lista-historico');
+        let lojaAlvo = localLogado === 'adm' ? document.getElementById('select-loja-adm').value : localLogado;
+        db.ref(`historico/${lojaAlvo}`).on('value', (snapshot) => {
+            const hist = snapshot.val() || [];
+            d.innerHTML = (hist && Object.keys(hist).length) ? '' : `<p style="color:white;text-align:center;padding:20px;">Sem pedidos.</p>`;
+            if(hist) {
+                const lista = Array.isArray(hist) ? hist : Object.values(hist);
+                lista.forEach((p, idx) => { 
+                    d.innerHTML += `<div class="pedido-historico"><button class="btn-del-hist" onclick="delHist('${lojaAlvo}', ${idx})">×</button><b>${p.data}</b><br><small style="white-space:pre-wrap;">${p.texto}</small></div>`; 
+                });
+            }
+        });
+    }
+
+    function delHist(loja, idx) { if(confirm("Excluir registro?")) { db.ref(`historico/${loja}`).once('value', (s) => { let h = s.val() || []; if(!Array.isArray(h)) h = Object.values(h); h.splice(idx, 1); db.ref(`historico/${loja}`).set(h); }); } }
+
+    function showView(v) {
+        const views = ['view-pedido', 'view-estoque', 'view-historico', 'footer-pedido'];
+        views.forEach(id => document.getElementById(id).style.display = 'none');
+        if(v === 'pedido') { document.getElementById('view-pedido').style.display = 'block'; document.getElementById('footer-pedido').style.display = 'block'; renderizar(); }
+        if(v === 'estoque') { document.getElementById('view-estoque').style.display = 'block'; renderEstoque(); }
+        if(v === 'historico') { document.getElementById('view-historico').style.display = 'block'; renderHistorico(); }
+    }
+
+    function enviarWhatsApp() {
+        const zap = document.getElementById('zap-destino').value;
+        db.ref(`marcados/${localLogado}`).once('value', (s) => {
+            const m = s.val() || [];
+            if(!zap || !m.length) return alert("Erro: Defina o número e selecione itens!");
+            let t = `*📦 PEDIDO XKMIX - ${localLogado.toUpperCase()}*\n\n`;
+            for(let c in database_itens) { const sel = database_itens[c].filter(x => m.includes(x)); if(sel.length) t += `*${c}:*\n${sel.map(x => "• "+x).join('\n')}\n\n`; }
+            
+            db.ref(`historico/${localLogado}`).once('value', (sh) => { 
+                let h = sh.val() || []; 
+                if(!Array.isArray(h)) h = Object.values(h);
+                h.unshift({data: new Date().toLocaleString('pt-BR'), texto: t}); 
+                db.ref(`historico/${localLogado}`).set(h).then(() => {
+                    window.open(`https://wa.me/${zap}?text=${encodeURIComponent(t)}`);
+                });
+            });
+        });
+    }
+
+    function toggleMenu(s) { document.getElementById("menu-lateral").style.width = s + "px"; }
+    function salvarZap(v) { localStorage.setItem(`xkmix_zap_${localLogado}`, v); }
+    function limparMarcacoes() { if(confirm("Limpar itens?")) db.ref(`marcados/${localLogado}`).set([]); }
+    function exportarEstoqueGeral() {
+        let r = `📋 RELATÓRIO GERAL XKMIX - ${new Date().toLocaleDateString()}\n\n`;
+        db.ref('estoque').once('value', (s) => {
+            const todos = s.val() || {};
+            LOJAS.forEach(loja => {
+                r += `--- LOJA ${loja.toUpperCase()} ---\n`;
+                const est = todos[loja] || {};
+                let tem = false;
+                for(let cat in database_itens) { database_itens[cat].forEach(item => { if(est[item] > 0) { r += `• ${item}: ${est[item]}\n`; tem = true; } }); }
+                if(!tem) r += `(Vazio)\n`; r += `\n`;
+            });
+            navigator.clipboard.writeText(r); alert("Relatório copiado!");
+        });
+    }
+</script>
+</body>
+</html>
