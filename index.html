@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SISTEMA GESTÃO CLOUD - XKmix</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        :root { --roxo: #4b2c71; --laranja: #e67e22; --verde: #25D366; --vermelho: #ff4757; }
+        body { font-family: sans-serif; background-color: var(--roxo); margin: 0; padding: 0; color: #333; }
+        
+        /* Menu Lateral Original */
+        #menu-lateral { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background-color: #fff; overflow-x: hidden; transition: 0.3s; padding-top: 60px; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
+        #menu-lateral a { padding: 15px 25px; text-decoration: none; font-size: 16px; color: var(--roxo); display: block; border-bottom: 1px solid #ddd; font-weight: bold; }
+        .btn-menu { font-size: 30px; cursor: pointer; color: white; position: fixed; top: 15px; left: 15px; z-index: 900; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 0 10px; }
+
+        /* Login */
+        #tela-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--roxo); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-box { background: white; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; }
+        .login-box select, .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-entrar { background: var(--laranja); color: white; border: none; width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* Interface */
+        #conteudo-sistema { display: none; }
+        .header { text-align: center; padding: 20px; }
+        .logo-container { width: 100px; height: 100px; margin: 0 auto; background: #fff; border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--laranja); overflow: hidden; }
+        .logo-container img { width: 100%; height: 100%; object-fit: contain; }
+        .container { max-width: 500px; margin: auto; padding: 15px; padding-bottom: 150px; }
+        
+        /* Cards */
+        .categoria-card { background: #fff; border-radius: 12px; margin-bottom: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        h2 { color: var(--roxo); font-size: 14px; border-bottom: 2px solid #eee; margin: 0 0 10px 0; padding-bottom: 5px; text-transform: uppercase; }
+        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f2f2f2; }
+        
+        /* Estoque Controles */
+        .controles-estoque { display: flex; align-items: center; gap: 10px; }
+        .btn-qtd { background: #eee; border: none; width: 30px; height: 30px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .qtd-valor { font-weight: bold; min-width: 20px; text-align: center; }
+
+        /* Lixeiras e Add */
+        .btn-lixeira { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--vermelho); }
+        .campo-add { display: flex; gap: 5px; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px; }
+        .campo-add input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn-add { background: var(--roxo); color: white; border: none; padding: 0 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+        .footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--roxo); padding: 15px; border-top: 2px solid var(--laranja); box-sizing: border-box; z-index: 800; }
+        .btn-whatsapp { background: var(--verde); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div id="tela-login">
+    <div class="header"><div class="logo-container"><img src="https://i.postimg.cc/vBf5rMQc/F3F489B5-7AC2-4DA8-94C8-D819346C6836.png"></div></div>
+    <div class="login-box">
+        <h3>SISTEMA XKMIX CLOUD</h3>
+        <select id="local-login">
+            <option value="pdp">Loja PDP</option>
+            <option value="cdv">Loja CDV</option>
+            <option value="tjcpp">Loja TJCPP</option>
+            <option value="goiana">Loja GOIANA</option>
+            <option value="expresso">Loja EXPRESSO</option>
+            <option value="adm">ADM Geral</option>
+        </select>
+        <input type="password" id="pass" placeholder="Senha">
+        <button class="btn-entrar" onclick="verificarLogin()">ENTRAR</button>
+    </div>
+</div>
+
+<div id="conteudo-sistema">
+    <div id="menu-lateral">
+        <a href="javascript:void(0)" onclick="toggleMenu(0)" style="font-size:30px;">&times;</a>
+        <a href="#" onclick="showView('pedido'); toggleMenu(0)">📝 Fazer Pedido</a>
+        <a href="#" onclick="showView('estoque'); toggleMenu(0)">📦 Estoque Online</a>
+        <hr>
+        <a href="#" onclick="location.reload()">➔ SAIR</a>
+    </div>
+
+    <span class="btn-menu" onclick="toggleMenu(250)">&#9776;</span>
+    <div class="header"><div class="logo-container"><img src="https://i.postimg.cc/vBf5rMQc/F3F489B5-7AC2-4DA8-94C8-D819346C6836.png"></div></div>
+
+    <div class="container" id="view-pedido">
+        <div style="background:white; padding:10px; border-radius:10px; margin-bottom:15px; border:2px solid var(--laranja);">
+            <input type="number" id="zap-destino" placeholder="WhatsApp (55819...)" style="width:100%; padding:10px; box-sizing:border-box; border-radius:5px; border:1px solid #ccc;">
+        </div>
+        <div id="lista-pedidos"></div>
+    </div>
+
+    <div class="container" id="view-estoque" style="display:none;">
+        <h2 style="color:white; border:none; text-align:center;">Estoque em Tempo Real</h2>
+        <div id="lista-estoque"></div>
+    </div>
+
+    <div class="footer" id="footer-pedido">
+        <button class="btn-whatsapp" onclick="enviarWhatsApp()">🚀 ENVIAR PEDIDO</button>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAH5egfaSGzr74JGZB-Wzii1VdkC1UiFKk",
+        authDomain: "sistema-xkmix.firebaseapp.com",
+        projectId: "sistema-xkmix",
+        storageBucket: "sistema-xkmix.firebasestorage.app",
+        messagingSenderId: "1096205200442",
+        appId: "1:1096205200442:web:491c0f7b57bd7599f71903",
+        databaseURL: "https://sistema-xkmix-default-rtdb.firebaseio.com/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const CATEGORIAS = ["SORVETES / AÇAÍS", "COMPLEMENTOS", "CREMES", "EMBALAGENS / DESCARTÁVEIS", "BEBIDAS", "MOLHOS", "COBERTURAS", "LIMPEZA"];
+    let localLogado = "";
+
+    function verificarLogin() {
+        const p = document.getElementById('pass').value;
+        if(p === "loja1" || p === "xkmix2026") {
+            localLogado = document.getElementById('local-login').value;
+            document.getElementById('tela-login').style.display = 'none';
+            document.getElementById('conteudo-sistema').style.display = 'block';
+            showView('pedido');
+        } else { alert("Senha incorreta!"); }
+    }
+
+    function renderPedido() {
+        db.ref('catalogo').on('value', snap => {
+            const cat = snap.val() || {};
+            db.ref(`marcados/${localLogado}`).on('value', sM => {
+                const marcados = sM.val() || [];
+                const div = document.getElementById('lista-pedidos');
+                div.innerHTML = '';
+                CATEGORIAS.forEach(c => {
+                    let h = `<div class="categoria-card"><h2>${c}</h2>`;
+                    (cat[c] || []).forEach(item => {
+                        const check = marcados.includes(item) ? 'checked' : '';
+                        h += `<div class="item-row">
+                            <label style="flex:1;"><input type="checkbox" onchange="marcar('${item}')" ${check}> ${item}</label>
+                            <button class="btn-lixeira" onclick="deletar('${c}','${item}')">🗑️</button>
+                        </div>`;
+                    });
+                    h += `<div class="campo-add">
+                        <input type="text" id="in-${c.replace(/\s/g,'')}" placeholder="Novo...">
+                        <button class="btn-add" onclick="adicionar('${c}')">+</button>
+                    </div></div>`;
+                    div.innerHTML += h;
+                });
+            });
+        });
+    }
+
+    function renderEstoque() {
+        db.ref('catalogo').once('value', snap => {
+            const cat = snap.val() || {};
+            db.ref(`estoque/${localLogado}`).on('value', sE => {
+                const est = sE.val() || {};
+                const div = document.getElementById('lista-estoque');
+                div.innerHTML = '';
+                CATEGORIAS.forEach(c => {
+                    let h = `<div class="categoria-card"><h2>${c}</h2>`;
+                    (cat[c] || []).forEach(item => {
+                        let qtd = est[item] || 0;
+                        h += `<div class="item-row">
+                            <span>${item}</span>
+                            <div class="controles-estoque">
+                                <button class="btn-qtd" onclick="altEst('${item}', -1)">-</button>
+                                <span class="qtd-valor">${qtd}</span>
+                                <button class="btn-qtd" onclick="altEst('${item}', 1)">+</button>
+                            </div>
+                        </div>`;
+                    });
+                    div.innerHTML += h + `</div>`;
+                });
+            });
+        });
+    }
+
+    function altEst(item, v) {
+        db.ref(`estoque/${localLogado}/${item}`).transaction(c => (c || 0) + v < 0 ? 0 : (c || 0) + v);
+    }
+
+    function adicionar(cat) {
+        const id = `in-${cat.replace(/\s/g,'')}`;
+        const nome = document.getElementById(id).value.trim();
+        if(!nome) return;
+        db.ref(`catalogo/${cat}`).once('value', s => {
+            let l = s.val() || [];
+            if(!l.includes(nome)) { l.push(nome); db.ref(`catalogo/${cat}`).set(l); }
+            document.getElementById(id).value = '';
+        });
+    }
+
+    function deletar(cat, item) {
+        if(confirm("Excluir item?")) {
+            db.ref(`catalogo/${cat}`).once('value', s => {
+                let l = s.val() || [];
+                db.ref(`catalogo/${cat}`).set(l.filter(i => i !== item));
+            });
+        }
+    }
+
+    function marcar(item) {
+        db.ref(`marcados/${localLogado}`).once('value', s => {
+            let m = s.val() || [];
+            m = m.includes(item) ? m.filter(x => x !== item) : [...m, item];
+            db.ref(`marcados/${localLogado}`).set(m);
+        });
+    }
+
+    function showView(v) {
+        document.getElementById('view-pedido').style.display = v === 'pedido' ? 'block' : 'none';
+        document.getElementById('view-estoque').style.display = v === 'estoque' ? 'block' : 'none';
+        document.getElementById('footer-pedido').style.display = v === 'pedido' ? 'block' : 'none';
+        if(v === 'pedido') renderPedido(); else renderEstoque();
+    }
+
+    function toggleMenu(s) { document.getElementById("menu-lateral").style.width = s + "px"; }
+    function enviarWhatsApp() { alert("Pedido pronto!"); }
+</script>
+</body>
+</html>
