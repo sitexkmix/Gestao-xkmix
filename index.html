@@ -1,0 +1,176 @@
+<script>
+    const DB_URL = "https://sistema-xkmix-default-rtdb.firebaseio.com/";
+    const LOJAS = ["pdp", "tjcpp", "cdv", "goiana", "expresso"];
+    const CREDENCIAIS = {
+        "pdp": {user: "pdp", pass: "loja1"}, "tjcpp": {user: "tjcpp", pass: "loja2"},
+        "cdv": {user: "cdv", pass: "loja3"}, "goiana": {user: "goiana", pass: "loja4"},
+        "expresso": {user: "expresso", pass: "loja5"}, "adm": {user: "adm", pass: "xkmix2026"}
+    };
+
+    let localLogado = "";
+    let database = {
+        "SORVETES / AÇAÍS": ["Abacaxi", "Abacaxi ao vinho", "Açaí", "Açaí c/ ninho", "Bananinha", "Base baulinha", "Base ninho", "Blue ice", "Caipirinha", "Canjica", "Cereja", "Choco menta", "Chocolate", "Cupuaçu", "Diamante Negro", "Ferrero rocher", "Frutas vermelhas", "Kiwi", "Limão", "Maçã verde", "Maracujá", "Morango", "Ninho com nutella", "Nutella", "Oreo", "Ovomaltine", "Paçoca", "Passas ao rum", "Pistache", "Prestígio"],
+        "COMPLEMENTOS": ["Amendoim", "Balafini amora", "Balafini azedinha", "Balafini bananinha", "Balafini beijinho", "Balafini colorida", "Canudo waffer", "Choco ball", "Farinha láctea", "Gotas de chocolate", "Granola", "Granulado", "Granulado colorido", "Jujuba", "Leite condensado", "Mashwmallow", "MM", "Ovinho de amendoim", "Ovomaltine", "Paçoca"],
+        "CREMES": ["Amarena", "Avelã", "Avelã essencial", "Choco trufa", "Coco", "Cookies", "Doce de leite", "Geleia de morango", "Laka", "Leitinho", "Leitinho crocante", "Oreo", "Ovomaltine", "Skimo", "Sonho de valsa"],
+        "EMBALAGENS / DESCARTÁVEIS": ["Base flurry", "Base mr 300 ml", "Base mr 500 ml", "Copo 180 ml", "Copo 300 ml", "Copo 330 ml", "Copo 440 ml-milkshake", "Copo 500 ml", "Guardanapo copo", "Guardanapos mesa", "Kraft G", "Kraft M", "Kraft P", "Kraft PP", "Papel inter-folhas", "Sacola de lixo 50L", "Sacola de lixo 100L", "Sacola G", "Sacola M", "Sacola P", "Sacola PPP", "Tampa 300 ml", "Tampa 500 ml", "Tampa bolha", "Tampa flurry", "Tampa mr 300 ml", "Tampa mr 500 ml"],
+        "BEBIDAS": ["Água mineral", "Água mineral com gás", "Coca cola 1L", "Coca cola 250 ml", "Coca cola 250 ml-zero", "Coca cola 500 ml", "Coca cola lata", "Coca cola lata- zero", "Coca cola 500 ml- zero", "Fanta lata", "Guaraná antártica 1L", "Guaraná lata", "H2O", "H2O limoneto", "Monster", "Schweppes lata", "Soda 1L", "Sukita 1L"],
+        "MOLHOS": ["Ketchup", "Maionese", "Mostarda"],
+        "COBERTURAS": ["Amora", "Blue ice", "Caramelo", "Chiclete", "Chocolate", "Doce de leite", "Fini bananinha", "Fini beijinho", "Fini dentadura", "Maracujá", "Morango"],
+        "LIMPEZA": ["Água sanitária", "Álcool", "Desinfetante", "Detergente", "Pinho-sol", "Sabonete líquido"]
+    };
+
+    // --- FUNÇÕES DE COMUNICAÇÃO COM FIREBASE ---
+    async function salvarBD(caminho, dados) {
+        await fetch(`${DB_URL}${caminho}.json`, { method: 'PUT', body: JSON.stringify(dados) });
+    }
+
+    async function buscarBD(caminho) {
+        const response = await fetch(`${DB_URL}${caminho}.json`);
+        return await response.json();
+    }
+
+    // --- LOGIN ---
+    function verificarLogin() {
+        const local = document.getElementById('local-login').value;
+        const u = document.getElementById('user').value.toLowerCase().trim();
+        const s = document.getElementById('pass').value.trim();
+        const cred = CREDENCIAIS[local];
+
+        if(cred && u === cred.user && s === cred.pass) {
+            localLogado = local;
+            document.getElementById('tela-login').style.display = 'none';
+            document.getElementById('conteudo-sistema').style.display = 'block';
+            document.getElementById('status-sessao').innerText = `CONECTADO: ${local.toUpperCase()}`;
+            
+            if(local === 'adm') {
+                preencherSelectsAdm();
+                document.getElementById('filtro-hist-adm').style.display = 'block';
+                document.getElementById('filtro-estoque-adm').style.display = 'block';
+                document.getElementById('opcoes-adm-menu').style.display = 'block';
+            }
+            showView('pedido');
+        } else {
+            document.getElementById('erro').style.display = 'block';
+        }
+    }
+
+    // --- ESTOQUE NO FIREBASE ---
+    async function renderEstoque() {
+        const app = document.getElementById('app-estoque');
+        app.innerHTML = '<p style="color:white; text-align:center;">Carregando nuvem...</p>';
+        
+        let lojaParaVer = localLogado === 'adm' ? document.getElementById('select-estoque-adm').value : localLogado;
+        let estoque = await buscarBD(`estoque/${lojaParaVer}`) || {};
+
+        app.innerHTML = '';
+        for (let cat in database) {
+            let h = `<div class="categoria-card"><h2>${cat}</h2>`;
+            database[cat].forEach(item => {
+                let qtd = estoque[item] || 0;
+                h += `<div class="item-row">
+                        <span class="${qtd <= 0 ? 'sem-estoque' : ''}">${item}</span>
+                        <div class="estoque-controles">
+                            <button class="btn-qtd" onclick="altEstoque('${lojaParaVer}', '${item}', -1)">-</button>
+                            <span class="qtd-num">${qtd}</span>
+                            <button class="btn-qtd" onclick="altEstoque('${lojaParaVer}', '${item}', 1)">+</button>
+                        </div>
+                      </div>`;
+            });
+            app.innerHTML += h + `</div>`;
+        }
+    }
+
+    async function altEstoque(loja, item, v) {
+        let est = await buscarBD(`estoque/${loja}`) || {};
+        est[item] = (est[item] || 0) + v;
+        if(est[item] < 0) est[item] = 0;
+        await salvarBD(`estoque/${loja}`, est);
+        renderEstoque();
+    }
+
+    // --- HISTÓRICO NO FIREBASE ---
+    async function renderHistorico() {
+        const d = document.getElementById('lista-historico');
+        d.innerHTML = '<p style="color:white; text-align:center;">Buscando registros...</p>';
+        
+        let lojaParaVer = localLogado === 'adm' ? document.getElementById('select-loja-adm').value : localLogado;
+        let hist = await buscarBD(`historico/${lojaParaVer}`) || [];
+        
+        d.innerHTML = hist.length ? '' : `<p style="color:white;text-align:center;padding:20px;">Sem pedidos registrados.</p>`;
+        hist.forEach((p, idx) => {
+            d.innerHTML += `<div class="pedido-historico">
+                <button class="btn-del-hist" onclick="delHist('${lojaParaVer}', ${idx})">×</button>
+                <b>${p.data}</b><br><small style="white-space:pre-wrap;">${p.texto}</small>
+            </div>`;
+        });
+    }
+
+    async function delHist(l, idx) {
+        if(confirm("Excluir este registro permanentemente?")) {
+            let h = await buscarBD(`historico/${l}`) || [];
+            h.splice(idx, 1);
+            await salvarBD(`historico/${l}`, h);
+            renderHistorico();
+        }
+    }
+
+    // --- PEDIDOS E WHATSAPP ---
+    async function enviarWhatsApp() {
+        const m = JSON.parse(localStorage.getItem(`xkmix_marcados_${localLogado}`) || "[]");
+        const zap = document.getElementById('zap-destino').value;
+        if(!zap || !m.length) return alert("Preencha o WhatsApp e selecione itens!");
+
+        let t = `*📦 PEDIDO XKMIX - ${localLogado.toUpperCase()}*\n\n`;
+        for(let c in database) {
+            const sel = database[c].filter(x => m.includes(x));
+            if(sel.length) t += `*${c}:*\n${sel.map(x => "• "+x).join('\n')}\n\n`;
+        }
+
+        // Salva no Histórico do Firebase
+        let h = await buscarBD(`historico/${localLogado}`) || [];
+        h.unshift({data: new Date().toLocaleString('pt-BR'), texto: t});
+        await salvarBD(`historico/${localLogado}`, h);
+
+        window.open(`https://wa.me/${zap}?text=${encodeURIComponent(t)}`);
+    }
+
+    // Funções Auxiliares mantidas do original
+    function preencherSelectsAdm() {
+        const opts = LOJAS.map(l => `<option value="${l}">Loja ${l.toUpperCase()}</option>`).join('');
+        document.getElementById('select-loja-adm').innerHTML = opts;
+        document.getElementById('select-estoque-adm').innerHTML = opts;
+    }
+
+    function showView(v) {
+        document.getElementById('view-pedido').style.display = v === 'pedido' ? 'block' : 'none';
+        document.getElementById('view-estoque').style.display = v === 'estoque' ? 'block' : 'none';
+        document.getElementById('view-historico').style.display = v === 'historico' ? 'block' : 'none';
+        document.getElementById('footer-pedido').style.display = v === 'pedido' ? 'block' : 'none';
+        if(v === 'pedido') renderizar(); 
+        if(v === 'estoque') renderEstoque(); 
+        if(v === 'historico') renderHistorico();
+    }
+
+    function toggleMenu(s) { document.getElementById("menu-lateral").style.width = s + "px"; }
+    function logout() { location.reload(); } // Recarrega para limpar sessão com segurança
+    
+    // As marcações de checkbox (temporárias) continuam no localStorage para não pesar o banco
+    function renderizar() {
+        const app = document.getElementById('app-pedidos'); app.innerHTML = '';
+        const marcados = JSON.parse(localStorage.getItem(`xkmix_marcados_${localLogado}`) || "[]");
+        for (let cat in database) {
+            let h = `<div class="categoria-card"><h2>${cat}</h2>`;
+            database[cat].forEach(item => {
+                const check = marcados.includes(item) ? 'checked' : '';
+                h += `<div class="item-row"><label style="display:flex;align-items:center;gap:10px;flex:1;"><input type="checkbox" style="width:20px;height:20px;" onchange="alternar('${item}')" ${check}><span>${item}</span></label></div>`;
+            });
+            app.innerHTML += h + `</div>`;
+        }
+    }
+
+    function alternar(i) {
+        let m = JSON.parse(localStorage.getItem(`xkmix_marcados_${localLogado}`) || "[]");
+        m = m.includes(i) ? m.filter(x => x !== i) : [...m, i];
+        localStorage.setItem(`xkmix_marcados_${localLogado}`, JSON.stringify(m));
+    }
+</script>
