@@ -1,0 +1,98 @@
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, push, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+/* ===============================
+   CONFIG FIREBASE
+================================ */
+
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "sistema-xkmix.firebaseapp.com",
+  databaseURL: "https://sistema-xkmix-default-rtdb.firebaseio.com/",
+  projectId: "sistema-xkmix",
+  storageBucket: "sistema-xkmix.appspot.com",
+  messagingSenderId: "SEU_ID",
+  appId: "SEU_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* ===============================
+   ESTOQUE
+================================ */
+
+async function salvarEstoque(loja, dados) {
+  await set(ref(db, 'estoque/' + loja), dados);
+}
+
+async function carregarEstoque(loja) {
+  const snapshot = await get(ref(db, 'estoque/' + loja));
+  if (snapshot.exists()) {
+    return snapshot.val();
+  }
+  return {};
+}
+
+/* ===============================
+   HISTÓRICO POR DATA
+================================ */
+
+async function salvarHistorico(loja, dados) {
+  const dataHoje = new Date().toISOString().split('T')[0];
+  await push(ref(db, 'historico/' + loja + '/' + dataHoje), dados);
+}
+
+async function carregarHistorico(loja) {
+  const snapshot = await get(ref(db, 'historico/' + loja));
+  if (snapshot.exists()) {
+    return snapshot.val();
+  }
+  return {};
+}
+
+async function excluirHistorico(loja, data) {
+  await remove(ref(db, 'historico/' + loja + '/' + data));
+}
+
+/* ===============================
+   PEDIDOS
+================================ */
+
+async function salvarPedido(loja, pedido) {
+  const dataHoje = new Date().toISOString().split('T')[0];
+  await push(ref(db, 'pedidos/' + loja + '/' + dataHoje), pedido);
+}
+
+async function carregarPedidos(loja) {
+  const snapshot = await get(ref(db, 'pedidos/' + loja));
+  if (snapshot.exists()) {
+    return snapshot.val();
+  }
+  return {};
+}
+
+/* ===============================
+   WHATSAPP
+================================ */
+
+function enviarWhatsApp(numero, mensagem) {
+  const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+  window.open(url, '_blank');
+}
+
+/* ===============================
+   EXPORTA PARA USAR NO HTML
+================================ */
+
+window.salvarEstoque = salvarEstoque;
+window.carregarEstoque = carregarEstoque;
+window.salvarHistorico = salvarHistorico;
+window.carregarHistorico = carregarHistorico;
+window.excluirHistorico = excluirHistorico;
+window.salvarPedido = salvarPedido;
+window.carregarPedidos = carregarPedidos;
+window.enviarWhatsApp = enviarWhatsApp;
+
+</script>
