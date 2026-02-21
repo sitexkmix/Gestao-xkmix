@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SISTEMA GESTÃO - XKmix</title>
+    <style>
+        :root {
+            --roxo-fundo: #4b2c71; 
+            --roxo-card: #ffffff;
+            --laranja: #e67e22;
+            --verde-zap: #25D366;
+            --vermelho: #ff4757;
+        }
+        body { font-family: sans-serif; background-color: var(--roxo-fundo); margin: 0; padding: 0; color: #333; overflow-x: hidden; }
+        
+        /* Menu Lateral */
+        #menu-lateral { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background-color: #f8f9fa; overflow-x: hidden; transition: 0.3s; padding-top: 60px; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
+        #menu-lateral a { padding: 15px 25px; text-decoration: none; font-size: 16px; color: var(--roxo-fundo); display: block; border-bottom: 1px solid #ddd; font-weight: bold; }
+        .btn-menu { font-size: 30px; cursor: pointer; color: white; position: fixed; top: 15px; left: 15px; z-index: 900; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 0 10px; }
+
+        /* Login */
+        #tela-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--roxo-fundo); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-box { background: white; padding: 25px; border-radius: 15px; text-align: center; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-box select, .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn-entrar { background: var(--laranja); color: white; border: none; width: 100%; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+
+        /* Header e Cards */
+        .logo-container { width: 120px; height: 120px; margin: 0 auto; background: #fff; border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--laranja); overflow: hidden; }
+        .logo-container img { width: 100%; height: 100%; object-fit: contain; }
+        .container { max-width: 500px; margin: auto; padding: 15px; padding-bottom: 220px; }
+        .categoria-card { background: var(--roxo-card); border-radius: 12px; margin-bottom: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        h2 { color: var(--roxo-fundo); font-size: 15px; border-bottom: 2px solid #eee; margin: 0 0 10px 0; padding-bottom: 5px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f2f2f2; }
+        
+        .btn-add-cat { background: var(--laranja); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-del-item { color: var(--vermelho); background: none; border: none; font-size: 18px; cursor: pointer; }
+        .footer-fixed { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--roxo-fundo); padding: 10px; box-sizing: border-box; z-index: 800; border-top: 2px solid var(--laranja); }
+        .btn-whatsapp { background: var(--verde-zap); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="tela-login">
+    <div class="logo-container"><img src="https://i.ibb.co/XrnM3fPj/image.png"></div>
+    <div class="login-box">
+        <h3>ACESSO XKMIX</h3>
+        <select id="local-login">
+            <option value="pdp">Loja PDP</option><option value="cdv">Loja CDV</option>
+            <option value="tjcpp">Loja TJCPP</option><option value="goiana">Loja GOIANA</option>
+            <option value="expresso">Loja EXPRESSO</option><option value="adm">Login ADM</option>
+        </select>
+        <input type="text" id="user" placeholder="Usuário">
+        <input type="password" id="pass" placeholder="Senha">
+        <button class="btn-entrar" onclick="verificarLogin()">ENTRAR</button>
+        <p id="erro" style="color:red; font-size:12px; display:none;">Dados incorretos!</p>
+    </div>
+</div>
+
+<div id="conteudo-sistema" style="display:none;">
+    <span class="btn-menu" onclick="toggleMenu(250)">&#9776;</span>
+    <div id="menu-lateral">
+        <a href="javascript:void(0)" onclick="toggleMenu(0)" style="font-size:30px;">&times;</a>
+        <a href="#" onclick="showView('pedido')">📝 Pedido</a>
+        <a href="#" onclick="showView('estoque')">📦 Estoque</a>
+        <a href="#" onclick="showView('historico')">📅 Histórico</a>
+        <a href="#" onclick="location.reload()" style="color:var(--vermelho);">➔ Sair</a>
+    </div>
+
+    <div class="container">
+        <div id="view-pedido">
+            <div style="background:white; padding:10px; border-radius:10px; margin-bottom:15px;"><input type="number" id="zap-destino" placeholder="WhatsApp Destino" onchange="localStorage.setItem('z', this.value)" style="width:100%; padding:8px;"></div>
+            <div id="app-pedidos"></div>
+        </div>
+        <div id="view-estoque" style="display:none;"><div id="app-estoque"></div></div>
+        <div id="view-historico" style="display:none;"><div id="lista-historico"></div></div>
+    </div>
+
+    <div class="footer-fixed" id="footer-btn" style="display:none;">
+        <button class="btn-whatsapp" onclick="enviarWhatsApp()">🚀 ENVIAR WHATSAPP</button>
+    </div>
+</div>
+
+<script>
+    const DB_URL = "https://sistema-xkmix-default-rtdb.firebaseio.com/";
+    const CREDENCIAIS = { "pdp": {user: "pdp", pass: "loja1"}, "adm": {user: "adm", pass: "xkmix2026"} }; // Adicione as outras aqui
+    let localLogado = "";
+    let baseProdutos = {};
+
+    // --- COMUNICAÇÃO ---
+    async function api(metodo, caminho, corpo = null) {
+        try {
+            const r = await fetch(`${DB_URL}${caminho}.json`, { 
+                method: metodo, 
+                body: corpo ? JSON.stringify(corpo) : null 
+            });
+            return r.ok ? await r.json() : null;
+        } catch (e) { return null; }
+    }
+
+    async function verificarLogin() {
+        const loc = document.getElementById('local-login').value;
+        const u = document.getElementById('user').value.toLowerCase().trim();
+        const s = document.getElementById('pass').value.trim();
+        
+        // Login simplificado para teste ou use seu objeto CREDENCIAIS
+        if(u !== "" && s !== "") { 
+            localLogado = loc;
+            document.getElementById('tela-login').style.display = 'none';
+            document.getElementById('conteudo-sistema').style.display = 'block';
+            await carregarProdutos();
+            showView('pedido');
+        }
+    }
+
+    async function carregarProdutos() {
+        let dados = await api('GET', 'config/produtos');
+        if(!dados) {
+            dados = { "SORVETES": ["Abacaxi", "Chocolate"], "BEBIDAS": ["Água"] };
+            await api('PUT', 'config/produtos', dados);
+        }
+        baseProdutos = dados;
+        renderPedido();
+    }
+
+    // --- FUNÇÕES DE ADICIONAR / REMOVER ---
+    async function adicionarItem(cat) {
+        const nome = prompt("Nome do item:");
+        if(nome) {
+            baseProdutos[cat].push(nome);
+            await api('PUT', 'config/produtos', baseProdutos);
+            renderPedido();
+        }
+    }
+
+    async function removerItem(cat, item) {
+        if(confirm(`Excluir ${item}?`)) {
+            baseProdutos[cat] = baseProdutos[cat].filter(i => i !== item);
+            await api('PUT', 'config/produtos', baseProdutos);
+            renderPedido();
+        }
+    }
+
+    // --- RENDER ---
+    function renderPedido() {
+        const app = document.getElementById('app-pedidos'); app.innerHTML = '';
+        const m = JSON.parse(localStorage.getItem(`m_${localLogado}`) || "[]");
+        for(let cat in baseProdutos) {
+            let h = `<div class="categoria-card"><h2>${cat} <button class="btn-add-cat" onclick="adicionarItem('${cat}')">+ ADD</button></h2>`;
+            baseProdutos[cat].forEach(i => {
+                const check = m.includes(i) ? 'checked' : '';
+                h += `<div class="item-row"><label><input type="checkbox" onchange="toggleMarca('${i}')" ${check}> ${i}</label><button class="btn-del-item" onclick="removerItem('${cat}','${i}')">×</button></div>`;
+            });
+            app.innerHTML += h + `</div>`;
+        }
+    }
+
+    function toggleMarca(i) {
+        let m = JSON.parse(localStorage.getItem(`m_${localLogado}`) || "[]");
+        m = m.includes(i) ? m.filter(x => x !== i) : [...m, i];
+        localStorage.setItem(`m_${localLogado}`, JSON.stringify(m));
+    }
+
+    async function enviarWhatsApp() {
+        const m = JSON.parse(localStorage.getItem(`m_${localLogado}`) || "[]");
+        const zap = document.getElementById('zap-destino').value;
+        if(!zap || m.length === 0) return alert("Selecione itens!");
+        let t = `*PEDIDO: ${localLogado.toUpperCase()}*\n` + m.map(i => "• "+i).join("\n");
+        window.open(`https://wa.me/${zap}?text=${encodeURIComponent(t)}`);
+    }
+
+    function showView(v) {
+        document.getElementById('view-pedido').style.display = v === 'pedido' ? 'block' : 'none';
+        document.getElementById('view-estoque').style.display = v === 'estoque' ? 'block' : 'none';
+        document.getElementById('footer-btn').style.display = v === 'pedido' ? 'block' : 'none';
+        toggleMenu(0);
+    }
+
+    function toggleMenu(s) { document.getElementById("menu-lateral").style.width = s + "px"; }
+    window.onload = () => { document.getElementById('zap-destino').value = localStorage.getItem('z') || ""; }
+</script>
+</body>
+</html>
